@@ -239,13 +239,14 @@ elif task == "About":
     RahatAI is a comprehensive NLP system for crisis and disaster management.
     
     **Components:**
-    - **4 Classification Models**: Naive Bayes, SVM (best), LSTM, CNN
+    - **5 Classification Models**: Transformer (best), SVM, Naive Bayes, LSTM, CNN
     - **NER**: Extract locations, phone numbers, resources, persons, organizations
     - **Summarization**: Generate summaries of crisis reports
     - **Misinformation Detection**: Identify false or misleading information
-    - **RAG Pipeline**: Question answering with document retrieval (pending setup)
+    - **RAG Pipeline**: Question answering with document retrieval
     
-    **Best Model:** SVM (66.5% accuracy, 0.6541 F1-score)
+    **Best Model:** Transformer (73.35% accuracy, 0.7205 F1-score)
+    **Production Model:** SVM (66.53% accuracy, fastest inference)
     
     **Dataset:** CrisisNLP + Kaggle (7,460 training samples, 6 categories)
     
@@ -272,13 +273,13 @@ elif task == "About":
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("SVM (Best)", "66.5%", "Accuracy")
+        st.metric("Transformer 🏆", "73.35%", "Best Accuracy")
     with col2:
-        st.metric("CNN", "52.1%", "Accuracy")
+        st.metric("SVM ⭐", "66.53%", "Fast Production")
     with col3:
-        st.metric("Naive Bayes", "48.8%", "Accuracy")
+        st.metric("CNN", "52.07%", "GPU-Accelerated")
     with col4:
-        st.metric("LSTM", "27.9%", "Accuracy")
+        st.metric("Naive Bayes", "48.76%", "Baseline")
 
 # Footer
 st.markdown("---")

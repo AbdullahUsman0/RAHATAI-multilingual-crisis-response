@@ -8,7 +8,39 @@ This file is rewritten in simple, beginner-friendly style.
 # BASIC IMPORTS
 # ----------------------------------------------------
 import numpy as np
-import tensorflow as tf
+import os
+
+# Configure TensorFlow with DirectML for AMD GPU (Python 3.10)
+# tensorflow-directml-plugin enables DirectML backend for training
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+try:
+    import tensorflow as tf
+    # Check for DirectML devices (available with tensorflow-directml-plugin on Python 3.10)
+    if hasattr(tf.config, 'list_physical_devices'):
+        physical_devices = tf.config.list_physical_devices()
+        print(f"TensorFlow devices available: {[str(d) for d in physical_devices]}")
+        # Check for DirectML devices
+        dml_devices = [d for d in physical_devices if 'DML' in str(d) or 'directml' in str(d).lower()]
+        if dml_devices:
+            print(f"✓ DirectML GPU devices found: {len(dml_devices)}")
+            print(f"  Using DirectML for AMD GPU acceleration (RX 590)")
+            try:
+                for device in dml_devices:
+                    tf.config.experimental.set_memory_growth(device, True)
+            except:
+                pass
+        else:
+            print("⚠ Warning: DirectML devices not found. Using CPU.")
+            print("  Make sure you have:")
+            print("  1. Python 3.10 installed")
+            print("  2. tensorflow-cpu==2.10.0 installed")
+            print("  3. tensorflow-directml-plugin installed")
+            print("  4. Latest AMD GPU drivers")
+except ImportError:
+    print("Warning: TensorFlow not found. Install with: pip install tensorflow-cpu==2.10.0 tensorflow-directml-plugin")
+    import tensorflow as tf
+
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -126,14 +158,14 @@ class LSTMClassifier:
         # Step 4: Batch Normalization
         norm_layer = layers.BatchNormalization()(lstm_out)
 
-        # Step 5: Dense layer
+        # Step 5: Dense layer (reduced for lighter model)
         dense_layer = layers.Dense(
-            128,
+            64,  # Reduced from 128 for lighter, faster model
             activation='relu'
         )(norm_layer)
 
         # Step 6: Dropout again
-        final_dropout = layers.Dropout(0.4)(dense_layer)
+        final_dropout = layers.Dropout(0.3)(dense_layer)  # Reduced dropout
 
         # Step 7: Output layer
         output_layer = layers.Dense(
@@ -147,9 +179,9 @@ class LSTMClassifier:
             outputs=output_layer
         )
 
-        # Compile model
+        # Compile model with RMSprop optimizer
         model.compile(
-            optimizer='adam',
+            optimizer=tf.keras.optimizers.RMSprop(learning_rate=1e-3),
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
@@ -217,7 +249,7 @@ class LSTMClassifier:
 
             validation_data = (padded_val, y_val)
 
-        # Train model
+        # Train model with memory-efficient settings
         history = self.model.fit(
             padded_train,
             y_train,
@@ -230,12 +262,14 @@ class LSTMClassifier:
                 keras.callbacks.EarlyStopping(
                     monitor='val_loss',
                     patience=5,
-                    restore_best_weights=True
+                    restore_best_weights=True,
+                    verbose=1
                 ),
                 keras.callbacks.ReduceLROnPlateau(
                     monitor='val_loss',
                     factor=0.5,
-                    patience=3
+                    patience=3,
+                    verbose=1
                 )
             ]
         )
@@ -292,8 +326,34 @@ class LSTMClassifier:
     def load(self, path: str):
         path = Path(path)
 
-        # Load model
-        self.model = keras.models.load_model(path / "model.h5")
+        # Load model with compile=False to avoid version compatibility issues
+        # Handle batch_shape errors that occur with TensorFlow version mismatches
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            try:
+                # Try loading with compile=False (for inference, we don't need compilation)
+                self.model = keras.models.load_model(
+                    path / "model.h5",
+                    compile=False
+                )
+            except (ValueError, TypeError, AttributeError) as e:
+                error_msg = str(e)
+                if 'batch_shape' in error_msg or 'Unrecognized keyword' in error_msg:
+                    # This is a known TensorFlow version compatibility issue
+                    # The model was likely saved with a different TensorFlow version
+                    raise ValueError(
+                        f"❌ Could not load LSTM model from {path}.\n"
+                        f"   Error: TensorFlow version compatibility issue (batch_shape).\n\n"
+                        f"   This happens when models are saved with one TensorFlow version\n"
+                        f"   and loaded with another.\n\n"
+                        f"   Solutions:\n"
+                        f"   1. Retrain the model: python RunScripts/STEP5_train_model3_lstm_efficient.py\n"
+                        f"   2. Or ensure TensorFlow 2.10.0: pip install tensorflow-cpu==2.10.0 --force-reinstall\n\n"
+                        f"   For now, you can use other models (SVM, Transformer, Naive Bayes) which work fine."
+                    )
+                else:
+                    raise
 
         # Load tokenizer
         with open(path / "tokenizer.pkl", "rb") as f:
@@ -388,9 +448,9 @@ class CNNClassifier:
             outputs=output_layer
         )
 
-        # Compile model
+        # Compile model with RMSprop optimizer
         model.compile(
-            optimizer='adam',
+            optimizer=tf.keras.optimizers.RMSprop(learning_rate=1e-3),
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
@@ -517,7 +577,34 @@ class CNNClassifier:
     def load(self, path: str):
         path = Path(path)
 
-        self.model = keras.models.load_model(path / "model.h5")
+        # Load model with compile=False to avoid version compatibility issues
+        # Handle batch_shape errors that occur with TensorFlow version mismatches
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            try:
+                # Try loading with compile=False (for inference, we don't need compilation)
+                self.model = keras.models.load_model(
+                    path / "model.h5",
+                    compile=False
+                )
+            except (ValueError, TypeError, AttributeError) as e:
+                error_msg = str(e)
+                if 'batch_shape' in error_msg or 'Unrecognized keyword' in error_msg:
+                    # This is a known TensorFlow version compatibility issue
+                    # The model was likely saved with a different TensorFlow version
+                    raise ValueError(
+                        f"❌ Could not load CNN model from {path}.\n"
+                        f"   Error: TensorFlow version compatibility issue (batch_shape).\n\n"
+                        f"   This happens when models are saved with one TensorFlow version\n"
+                        f"   and loaded with another.\n\n"
+                        f"   Solutions:\n"
+                        f"   1. Retrain the model: python RunScripts/train_cnn.py\n"
+                        f"   2. Or ensure TensorFlow 2.10.0: pip install tensorflow-cpu==2.10.0 --force-reinstall\n\n"
+                        f"   For now, you can use other models (SVM, Transformer, Naive Bayes) which work fine."
+                    )
+                else:
+                    raise
 
         with open(path / "tokenizer.pkl", "rb") as f:
             self.tokenizer = pickle.load(f)

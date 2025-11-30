@@ -29,12 +29,12 @@ from Scripts.evaluation.metrics import (
     print_metrics_summary,
 )
 
-# Disable GPU usage (force CPU)
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+# Configure DirectML for AMD GPU support
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # Required for DirectML compatibility
 
 print("=" * 70)
 print("STEP 5 (Improved): TRAINING MODEL 3 - LSTM with Better Balancing")
+print("Using DirectML for AMD GPU acceleration")
 print("=" * 70)
 
 # ----------------------------------------------------

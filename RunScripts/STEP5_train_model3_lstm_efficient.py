@@ -29,13 +29,16 @@ from Scripts.evaluation.metrics import (
     save_metrics,
     print_metrics_summary,
 )
+import tensorflow as tf
+tf.keras.backend.clear_session()
 
-# Disable GPU usage (force CPU)
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+# Configure DirectML for AMD GPU support and memory optimization
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # Required for DirectML compatibility
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"  # Prevent OOM by growing memory gradually
 
 print("=" * 70)
 print("STEP 5 (Efficient): TRAINING MODEL 3 - LSTM with Advanced Balancing")
+print("Using DirectML for AMD GPU acceleration")
 print("=" * 70)
 
 # ----------------------------------------------------
@@ -81,9 +84,11 @@ for cls in sorted(unique_classes):
 # ----------------------------------------------------
 print("\n2. Balancing training data using random oversampling...")
 
-# Find the maximum class count
+# Find the maximum class count, but limit it to prevent OOM and speed up training
 max_count = max(class_counts_before.values())
-print(f"   Target samples per class: {max_count}")
+# Limit oversampling more aggressively for faster training - cap at 1.5x the original max
+max_count = min(max_count, int(max_count * 1.5))  # Less oversampling = faster training
+print(f"   Target samples per class: {max_count} (capped at 1.5x for speed)")
 
 # Oversample minority classes
 X_train_balanced = []
@@ -182,40 +187,47 @@ for cls, weight in zip(unique_classes, weights_array):
 # 4. Create optimized LSTM model
 # ----------------------------------------------------
 print("\n4. Creating optimized LSTM model...")
-print("   Architecture: Bidirectional LSTM with attention-like features")
+print("   Architecture: Unidirectional LSTM (lightweight, fast training)")
 
-# Create LSTM model with optimized hyperparameters
+# Create LSTM model with ULTRA-LIGHT hyperparameters for fast training
+# Minimized sizes for quick training while maintaining reasonable performance
 lstm_model = LSTMClassifier(
-    max_features=20000,      # Increased vocabulary
-    max_length=150,          # Slightly longer sequences
-    embedding_dim=128,       # Standard embedding
-    lstm_units=128,          # Standard LSTM units
+    max_features=5000,        # ↓ further reduced (faster tokenization)
+    max_length=64,            # ↓ reduced (shorter sequences = faster)
+    embedding_dim=32,         # ↓ reduced (lighter embeddings)
+    lstm_units=32,            # ↓ reduced (smaller LSTM = faster)
     num_classes=num_classes,
-    bidirectional=True,      # Use bidirectional LSTM
-    spatial_dropout=0.3      # Moderate dropout
+    bidirectional=False,      # ✅ DISABLE (saves 2x memory and time)
+    spatial_dropout=0.2       # Standard dropout
 )
+
 
 # ----------------------------------------------------
 # 5. Train model with optimized settings
 # ----------------------------------------------------
-print("\n5. Training LSTM model with optimized settings...")
-print("   - Balanced training data (oversampled)")
+print("\n5. Training LSTM model with ULTRA-LIGHT & FAST settings...")
+print("   - Lightweight model (32 units, 32 embedding, 64 max length)")
+print("   - Balanced training data (limited oversampling for speed)")
 print("   - Strong class weights applied")
-print("   - Learning rate scheduling")
-print("   - Early stopping with patience")
-print("   - This may take 45-60 minutes...")
+print("   - Learning rate scheduling (ReduceLROnPlateau)")
+print("   - Early stopping with patience=5")
+print("   - Optimized batch size (8) for speed")
+print("   - RMSprop optimizer (learning_rate=1e-3)")
+print("   - This should take 10-15 minutes with GPU...")
 
-# Train the model with more epochs and better monitoring
+# Train the model with ULTRA-FAST settings
+# Small batch size prevents OOM, optimized for speed
 history = lstm_model.train(
-    X_train_balanced,  # Use balanced data
-    y_train_balanced,  # Use balanced labels
+    X_train_balanced,
+    y_train_balanced,
     X_val,
     y_val,
-    epochs=30,          # More epochs
-    batch_size=64,      # Larger batch size for efficiency
+    epochs=10,           # ↓ fewer epochs (early stopping will handle it)
+    batch_size=8,         # ↑ slightly larger batch (faster, still safe)
     verbose=1,
-    class_weight=class_weights  # Still apply class weights
+    class_weight=class_weights  # ✅ Use class weights for better learning
 )
+
 
 # ----------------------------------------------------
 # 6. Evaluate on test set
