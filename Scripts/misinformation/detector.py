@@ -14,6 +14,15 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 from typing import List, Dict
 import pandas as pd
 
+# Configure DirectML for AMD GPU support
+# Note: torch-directml may not be available as a standard package
+DIRECTML_AVAILABLE = False
+try:
+    import torch_directml
+    DIRECTML_AVAILABLE = True
+except ImportError:
+    DIRECTML_AVAILABLE = False
+
 from Scripts.utils import load_config
 from Scripts.classification.transformer_models import TransformerClassifier
 
@@ -36,10 +45,22 @@ class MisinformationDetector:
         self.model_name = model_name
         self.threshold = threshold
         
+        # Set device - prioritize DirectML for AMD GPU
         if device is None:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            if DIRECTML_AVAILABLE:
+                try:
+                    self.device = torch_directml.device()
+                except:
+                    self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            elif torch.cuda.is_available():
+                self.device = torch.device('cuda')
+            else:
+                self.device = torch.device('cpu')
         else:
-            self.device = torch.device(device)
+            if device == 'directml' and DIRECTML_AVAILABLE:
+                self.device = torch_directml.device()
+            else:
+                self.device = torch.device(device)
         
         # Initialize as binary classifier
         # In practice, you'd fine-tune this on misinformation dataset

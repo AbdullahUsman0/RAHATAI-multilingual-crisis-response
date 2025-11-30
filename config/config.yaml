@@ -35,7 +35,7 @@ classification:
   
   # Transformer Models
   transformer_models:
-    - "xlm-roberta-base"
+    - "sentence-transformers/all-MiniLM-L6-v2"
   
   # Training
   batch_size: 32
@@ -89,7 +89,7 @@ misinformation:
 # General Settings
 general:
   random_seed: 42
-  device: "cuda"  # or "cpu"
+  device: "directml"  # "directml" for AMD GPU, "cuda" for NVIDIA, "cpu" for CPU
   num_workers: 4
   verbose: true
 

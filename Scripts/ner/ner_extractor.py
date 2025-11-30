@@ -11,6 +11,16 @@ sys.path.insert(0, str(project_root))
 
 import re
 import torch
+
+# Configure DirectML for AMD GPU support
+# Note: torch-directml may not be available as a standard package
+DIRECTML_AVAILABLE = False
+try:
+    import torch_directml
+    DIRECTML_AVAILABLE = True
+except ImportError:
+    DIRECTML_AVAILABLE = False
+
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 from typing import List, Dict
 import pandas as pd
@@ -30,10 +40,26 @@ class MultilingualNER:
             model_name: HuggingFace model name
             device: Device to use ('cuda' or 'cpu')
         """
+        # Set device - prioritize DirectML for AMD GPU
+        # Note: transformers pipeline uses device index, not torch.device
         if device is None:
-            self.device = 0 if torch.cuda.is_available() else -1
+            if DIRECTML_AVAILABLE:
+                try:
+                    # For DirectML, we use device 0 (DirectML device)
+                    self.device = 0
+                except:
+                    self.device = 0 if torch.cuda.is_available() else -1
+            elif torch.cuda.is_available():
+                self.device = 0
+            else:
+                self.device = -1
         else:
-            self.device = 0 if device == 'cuda' else -1
+            if device == 'directml' and DIRECTML_AVAILABLE:
+                self.device = 0
+            elif device == 'cuda':
+                self.device = 0
+            else:
+                self.device = -1
         
         # Initialize NER pipeline
         try:
