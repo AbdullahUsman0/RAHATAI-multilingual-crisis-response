@@ -1,4 +1,4 @@
-# 🆘 RahatAI - Multilingual Crisis Response NLP System
+ 🆘 RahatAI - Multilingual Crisis Response NLP System
 
 <div align="center">
 
