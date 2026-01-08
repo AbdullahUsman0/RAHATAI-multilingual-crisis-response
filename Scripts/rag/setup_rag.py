@@ -10,10 +10,20 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from langchain.document_loaders import PyPDFLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+try:
+    from langchain_community.document_loaders import PyPDFLoader, TextLoader
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+except ImportError:
+    # Fallback for older langchain versions
+    from langchain.document_loaders import PyPDFLoader, TextLoader
+    from langchain.embeddings import HuggingFaceEmbeddings
+    from langchain.vectorstores import FAISS
+
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pickle
 import os
 

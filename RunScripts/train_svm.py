@@ -4,10 +4,15 @@ This model is more powerful than Naive Bayes.
 """
 
 import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 import json
 import pickle
 import pandas as pd
-from pathlib import Path
 
 # Sklearn imports
 from sklearn.svm import SVC
@@ -75,18 +80,23 @@ print("   Training labels:", len(y_train))
 print("\n3. Creating SVM model...")
 print("   - TF-IDF converts text to numerical features")
 print("   - SVM with linear kernel (best for text classification)")
+print("   - C=10.0 (stronger fit to training data)")
+print("   - class_weight='balanced' (handles imbalanced classes)")
 print("   - probability=True allows probability scores")
 
 model = Pipeline([
     ("tfidf", TfidfVectorizer(
         max_features=10000,
-        ngram_range=(1, 2)
+        ngram_range=(1, 2),
+        min_df=2,  # Ignore words that appear in less than 2 documents
+        max_df=0.95  # Ignore words that appear in more than 95% of documents
     )),
     ("svm", SVC(
-        C=1.0,
+        C=10.0,  # Increased from 1.0 - stronger fit to training data
         kernel="linear",
         probability=True,
-        random_state=42
+        random_state=42,
+        class_weight='balanced'  # Add class weights to handle imbalanced data
     ))
 ])
 

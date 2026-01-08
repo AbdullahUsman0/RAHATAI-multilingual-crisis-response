@@ -15,35 +15,20 @@ print("=" * 70)
 print("RAG SETUP - ADD YOUR DOCUMENT PATHS BELOW")
 print("=" * 70)
 
-# ============================================================
-# STEP 1: Add your document paths here
-# ============================================================
-# Place your PDF/text files in Data/documents/ folder
-# Then add their paths below:
 
 doc_paths = [
-    # Example paths (uncomment and modify):
-    # "Data/documents/disaster_response_guide.pdf",
-    # "Data/documents/emergency_contacts.txt",
-    # "Data/documents/evacuation_procedures.pdf",
-    
-    # Add your document paths here:
-    # "Data/documents/your_file1.pdf",
-    # "Data/documents/your_file2.txt",
+    # Text document
+    "Data/documents/sample_disaster_response_guide.txt",
+
 ]
 
-# ============================================================
-# STEP 2: Check if documents folder exists
-# ============================================================
 documents_dir = Path("Data/documents")
 if not documents_dir.exists():
     documents_dir.mkdir(parents=True, exist_ok=True)
     print(f"\nCreated documents folder: {documents_dir}")
     print("Please add your PDF/text files to this folder first!")
 
-# ============================================================
-# STEP 3: Check if any documents are specified
-# ============================================================
+
 if not doc_paths:
     print("\n" + "=" * 70)
     print("NO DOCUMENTS SPECIFIED")
@@ -59,9 +44,6 @@ if not doc_paths:
     print("=" * 70)
     sys.exit(0)
 
-# ============================================================
-# STEP 4: Setup RAG vector store
-# ============================================================
 print(f"\nSetting up RAG with {len(doc_paths)} document(s)...")
 setup_rag_vectorstore(doc_paths=doc_paths)
 

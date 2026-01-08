@@ -1,12 +1,4 @@
-"""
-Comprehensive evaluation metrics for RahatAI
 
-Calculates all required metrics:
-- Accuracy, Precision, Recall, F1-Score
-- AUC-ROC, Exact Match, Top-k Accuracy
-- Confusion Matrix
-- Training/validation plots (accuracy & loss curves)
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -23,19 +15,7 @@ def calculate_classification_metrics(y_true: np.ndarray, y_pred: np.ndarray,
                                      y_proba: Optional[np.ndarray] = None,
                                      labels: Optional[List] = None,
                                      average: str = 'weighted') -> Dict:
-    """
-    Calculate all classification metrics
     
-    Args:
-        y_true: True labels
-        y_pred: Predicted labels
-        y_proba: Prediction probabilities (for AUC)
-        labels: List of label names
-        average: Averaging strategy for multi-class
-        
-    Returns:
-        dict: Dictionary of metrics
-    """
     metrics = {}
     
     # Basic metrics
@@ -91,19 +71,7 @@ def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray,
                          y_proba: Optional[np.ndarray] = None,
                          labels: Optional[List] = None,
                          top_k: int = 3) -> Dict:
-    """
-    Calculate all required metrics for evaluation
-    
-    Args:
-        y_true: True labels
-        y_pred: Predicted labels
-        y_proba: Prediction probabilities
-        labels: List of label names
-        top_k: k for top-k accuracy
-        
-    Returns:
-        dict: Complete metrics dictionary
-    """
+  
     metrics = calculate_classification_metrics(y_true, y_pred, y_proba, labels)
     
     # Add Top-k Accuracy
@@ -119,17 +87,7 @@ def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray,
                          save_path: Optional[str] = None,
                          title: str = "Confusion Matrix",
                          figsize: Tuple[int, int] = (10, 8)):
-    """
-    Plot confusion matrix
     
-    Args:
-        y_true: True labels
-        y_pred: Predicted labels
-        labels: List of label names
-        save_path: Path to save the plot
-        title: Plot title
-        figsize: Figure size
-    """
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     
     plt.figure(figsize=figsize)
@@ -148,14 +106,7 @@ def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray,
 
 def plot_training_history(history: Dict, save_dir: str = "Outputs/plots/",
                          model_name: str = "model"):
-    """
-    Plot training and validation accuracy/loss curves
     
-    Args:
-        history: Training history dictionary with keys like 'loss', 'val_loss', 'accuracy', 'val_accuracy'
-        save_dir: Directory to save plots
-        model_name: Name of the model (for filename)
-    """
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     

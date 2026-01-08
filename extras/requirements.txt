@@ -1,0 +1,38 @@
+# Core Data Processing
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Machine Learning (for SVM, Naive Bayes)
+scikit-learn>=1.0.0
+
+# Natural Language Processing
+nltk>=3.7
+
+# Visualization (for metrics and plots)
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Deep Learning (PyTorch - CPU)
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers (for transformer models)
+transformers>=4.30.0
+sentence-transformers>=2.2.0
+
+# RAG System (Retrieval-Augmented Generation)
+langchain>=0.1.0
+langchain-community>=0.0.1
+faiss-cpu>=1.7.4
+pymupdf>=1.23.0  # For PDF document processing
+
+# API Server (for Android/CrisisConnect integration)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Speech-to-Text (Whisper for Roman Urdu voice input)
+openai-whisper>=20231117
+soundfile>=0.12.1
+

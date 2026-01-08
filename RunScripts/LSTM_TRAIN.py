@@ -1,6 +1,6 @@
 """
-STEP 5 (Tuned): TRAIN MODEL 3 - LSTM
-Very simple and easy-to-read version.
+Train LSTM Model - Tuned Version
+Simple and easy-to-read LSTM training script with hyperparameter tuning
 """
 
 # ----------------------------------------------------
